@@ -21,8 +21,8 @@ sdrewardpath = 0.025
 
 tlimitchoice = 3.0
 
-monitor_width=1024.
-monitor_height=768.
+monitor_width  = 1024.
+monitor_height = 768.
 
 '''
 ================================================================================================
@@ -110,7 +110,7 @@ def initgraphics(pal=pal):
         },
         'text': {
             0: visual.TextStim(win, text='X', units='pix', height=0.25*monitor_height, pos=[0,-0.15*monitor_height], color=[-0.164, -0.96, -1]),
-            1: visual.TextStim(win, text='$', units='pix', height=0.25*monitor_height, pos=[0,-0.3*monitor_height], color=[0.375, -0.359, -0.93])
+            1: visual.TextStim(win, text='$', units='pix', height=0.25*monitor_height, pos=[0,-0.15*monitor_height], color=[0.375, -0.359, -0.93])
         }
     }
     
