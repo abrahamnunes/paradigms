@@ -1,4 +1,8 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from psychopy import core, visual, event
+import sys
 import pandas as pd
 import numpy as np
 import numpy.random as rnd
@@ -13,7 +17,7 @@ from random import shuffle
 ================================================================================================
 '''
 
-ntrials = 2
+ntrials = 10
 
 lbound = 0.25
 ubound = 0.75
@@ -21,8 +25,13 @@ sdrewardpath = 0.025
 
 tlimitchoice = 3.0
 
-monitor_width  = 1024.
-monitor_height = 768.
+fullscreen = True
+if fullscreen is True:
+    monitor_width  = 1024.
+    monitor_height = 768.
+else: 
+    monitor_width = 700
+    monitor_height = 700
 
 '''
 ================================================================================================
@@ -34,9 +43,9 @@ monitor_height = 768.
 
 # Set up the window
 win = visual.Window(
-    [800, 1000], 
+    [monitor_width, monitor_height], 
     monitor="testMonitor",
-    fullscr=True,
+    fullscr=fullscreen,
     units='pix'
 )
 
@@ -47,6 +56,14 @@ pal = [[ 0.78125  , -0.796875 , -0.78125  ],
        [ 0.1875   , -0.390625 ,  0.2734375],
        [ 0.9921875, -0.0078125, -1.       ],
        [ 0.9921875,  0.9921875, -0.6015625]]
+
+# Characters for stimuli
+chars = [u'\u0EB0',
+         u'\u0ED0', 
+         u'\u0E81', 
+         u'\u0EC1', 
+         u'\u0ED1', 
+         u'\u0E82'] 
 
 '''
 ------------------------------------------------------------------------------------------------
@@ -60,9 +77,11 @@ pal = [[ 0.78125  , -0.796875 , -0.78125  ],
 intromessage = visual.TextStim(win, 
     text='Thank you for participating in our study.\n\n' +
          'You will be playing a game in which the goal is to maximize the amount of reward you receive.\n\n' + 
-         'We will start with a training step in order to familiarize yourself with the task.'
+         'We will start with a training step in order to familiarize yourself with the task.\n\n'
          'Press any key to continue...'
 )
+
+
 
 # Respond faster message
 respondfaster = visual.TextStim(win, 
@@ -78,23 +97,43 @@ respondfaster = visual.TextStim(win,
 '''
 
 # Function to initialize the stimulus colours
-def initgraphics(pal=pal):
+def initgraphics(pal=pal, chars=chars):
+    shuffle(chars)
     shuffle(pal)
     stim = {
         0: {
             0: {
                 0: visual.Rect(win, units='pix', width=0.25*monitor_height, height=0.25*monitor_height, lineColor=[-1,-1,-1], fillColor=pal[0]),
-                1: visual.Rect(win, units='pix', width=0.25*monitor_height, height=0.25*monitor_height, lineColor=[-1,-1,-1], fillColor=pal[1])
+                1: visual.Rect(win, units='pix', width=0.25*monitor_height, height=0.25*monitor_height, lineColor=[-1,-1,-1], fillColor=pal[0])
             }
         },
         1: {
             0: {
-                0: visual.Rect(win, units='pix', width=0.25*monitor_height, height=0.25*monitor_height, lineColor=[-1,-1,-1], fillColor=pal[2]),
-                1: visual.Rect(win, units='pix', width=0.25*monitor_height, height=0.25*monitor_height, lineColor=[-1,-1,-1], fillColor=pal[3])
+                0: visual.Rect(win, units='pix', width=0.25*monitor_height, height=0.25*monitor_height, lineColor=[-1,-1,-1], fillColor=pal[1]),
+                1: visual.Rect(win, units='pix', width=0.25*monitor_height, height=0.25*monitor_height, lineColor=[-1,-1,-1], fillColor=pal[1])
             },
             1: {
-                0: visual.Rect(win, units='pix', width=0.25*monitor_height, height=0.25*monitor_height, lineColor=[-1,-1,-1], fillColor=pal[4]),
-                1: visual.Rect(win, units='pix', width=0.25*monitor_height, height=0.25*monitor_height, lineColor=[-1,-1,-1], fillColor=pal[5])
+                0: visual.Rect(win, units='pix', width=0.25*monitor_height, height=0.25*monitor_height, lineColor=[-1,-1,-1], fillColor=pal[2]),
+                1: visual.Rect(win, units='pix', width=0.25*monitor_height, height=0.25*monitor_height, lineColor=[-1,-1,-1], fillColor=pal[2])
+            }
+        }
+    }
+    
+    stimtext = {
+        0: {
+            0: {
+                0: visual.TextStim(win, text=chars[0], units='pix', height=0.2*monitor_height, color=[-1,-1,-1], font='DejaVu Sans'),
+                1: visual.TextStim(win, text=chars[1], units='pix', height=0.2*monitor_height, color=[-1,-1,-1], font='DejaVu Sans')
+            }
+        },
+        1: {
+            0: {
+                0: visual.TextStim(win, text=chars[2], units='pix', height=0.2*monitor_height, color=[-1,-1,-1], font='DejaVu Sans'),
+                1: visual.TextStim(win, text=chars[3], units='pix', height=0.2*monitor_height, color=[-1,-1,-1], font='DejaVu Sans')
+            },
+            1: {
+                0: visual.TextStim(win, text=chars[4], units='pix', height=0.2*monitor_height, color=[-1,-1,-1], font='DejaVu Sans'),
+                1: visual.TextStim(win, text=chars[5], units='pix', height=0.2*monitor_height, color=[-1,-1,-1], font='DejaVu Sans')
             }
         }
     }
@@ -114,7 +153,7 @@ def initgraphics(pal=pal):
         }
     }
     
-    return stim, rewardicons
+    return stim, stimtext, rewardicons
 
 # Draw fixation cross
 def drawfixation():
@@ -124,13 +163,13 @@ def drawfixation():
     horz.draw()
 
 # Function to draw the stimuli
-def drawrect(step, state, stim, sel=None):
+def drawrect(step, state, stim, stimtext, sel=None):
     pos = [[-0.25*monitor_width, -0.1*monitor_height   ],
            [0.25*monitor_width , -0.1*monitor_height   ],
            [0   , 0.25*monitor_height ]];
     
     if sel is not None:
-        drawselected(0, 0, sel, stim)
+        drawselected(0, 0, sel, stim, stimtext)
     
     stimorder = [0, 1]
     shuffle(stimorder)
@@ -143,13 +182,25 @@ def drawrect(step, state, stim, sel=None):
     stim[step][state][stimorder[0]].draw()
     stim[step][state][stimorder[1]].draw()
     
+    stimtext[step][state][stimorder[0]].pos = pos[0]
+    stimtext[step][state][stimorder[1]].pos = pos[1]
+    stimtext[step][state][stimorder[0]].opacity = 1
+    stimtext[step][state][stimorder[1]].opacity = 1
+    
+    stimtext[step][state][stimorder[0]].draw()
+    stimtext[step][state][stimorder[1]].draw()
+    
     return stimorder
 
 # Draw the selected stimulus with reduced opacity
-def drawselected(step, state, sel, stim):
+def drawselected(step, state, sel, stim, stimtext):
     stim[step][state][sel].pos = [0, 0.25*monitor_height]
     stim[step][state][sel].opacity = 0.5
+    stimtext[step][state][sel].pos = [0, 0.25*monitor_height]
+    stimtext[step][state][sel].opacity = 0.5
+    
     stim[step][state][sel].draw()
+    stimtext[step][state][sel].draw()
 
 # Transition function
 def transition(sel):
@@ -180,14 +231,16 @@ def displayreward(reward, rewardicons):
     rewardicons['text'][reward].draw()
 
 # Animate movement of chosen option to top of screen
-def animatechoice(step, state, sel, stim):
+def animatechoice(step, state, sel, stim, stimtext):
     endpos = np.array([0, 0.25*monitor_height])
     startpos = stim[step][state][sel].pos
     nframes = int(np.floor(1.0/win.monitorFramePeriod))
     ddist = (endpos - startpos)/nframes
     for frame in range(nframes):
         stim[step][state][sel].pos = stim[step][state][sel].pos + ddist
+        stimtext[step][state][sel].pos = stim[step][state][sel].pos
         stim[step][state][sel].draw()
+        stimtext[step][state][sel].draw()
         win.flip()
 
 '''
@@ -198,7 +251,7 @@ def animatechoice(step, state, sel, stim):
 ================================================================================================
 '''
 
-stim, rewardicons = initgraphics()             # Initialize the stimuli
+stim, stimtext, rewardicons = initgraphics()             # Initialize the stimuli
 
 paths      = np.zeros([ntrials+1, 4])          # Initialize path array
 paths[0,:] = rnd.uniform(lbound, ubound, 4)    # Set initial reward probabilities
@@ -238,11 +291,6 @@ event.waitKeys()
 ------------------------------------------------------------------------------------------------
 '''
 
-# Reward tally for display
-totalreward = 0 
-rewtally = visual.TextStim(win, units='pix', text= '$ ' + str(totalreward), pos=[0, -0.25*monitor_height])
-
-itertext = visual.TextStim(win, units='pix', text='0', pos=[0.4*monitor_width, 0.4*monitor_height])
 t = 0
 while t <= ntrials-1:
     for trial in range(t, ntrials):
@@ -250,8 +298,6 @@ while t <= ntrials-1:
             INTER-STIMULUS INTERVAL
         '''
         drawfixation()
-        itertext.text = str(t)
-        itertext.draw()
         win.flip()
         core.wait(rnd.exponential(1.5))
         
@@ -259,9 +305,7 @@ while t <= ntrials-1:
             STEP 1
         '''
         # Present stimuli
-        stimorder = drawrect(0, 0, stim=stim)
-        rewtally.draw()
-        itertext.draw()
+        stimorder = drawrect(0, 0, stim=stim, stimtext=stimtext)
         win.flip()
         
         # Collect response within step time limit
@@ -285,10 +329,8 @@ while t <= ntrials-1:
         step2state = transition(step1choice)
         
         # During the transition period, draw the selected Step1 choice above
-        animatechoice(0, 0, step1choice, stim)
-        drawselected(0, 0, step1choice, stim)
-        rewtally.draw()
-        itertext.draw()
+        animatechoice(0, 0, step1choice, stim, stimtext)
+        drawselected(0, 0, step1choice, stim, stimtext)
         win.flip()
         core.wait(1.5)
         
@@ -296,9 +338,7 @@ while t <= ntrials-1:
             STEP 2
         '''
         # Draw the Step2 Stimuli
-        stimorder = drawrect(1, step2state, stim=stim, sel=step1choice)
-        rewtally.draw()
-        itertext.draw()
+        stimorder = drawrect(1, step2state, stim=stim, stimtext=stimtext, sel=step1choice)
         win.flip()
         
         # Collect the response
@@ -319,23 +359,17 @@ while t <= ntrials-1:
         '''
         # Compute the reward from reward fuction based on choices
         reward = rewardfunction(step2state, step2choice, paths[t,:])
-        totalreward += reward
         
         # Draw the selected step 2 choice
-        animatechoice(1, step2state, step2choice, stim)
-        drawselected(1, step2state, step2choice, stim)
-        rewtally.draw()
-        itertext.draw()
+        animatechoice(1, step2state, step2choice, stim, stimtext)
+        drawselected(1, step2state, step2choice, stim, stimtext)
         win.flip()
         core.wait(1.5)
         
         # Display the reward outcome
-        drawselected(1, step2state, step2choice, stim)
+        drawselected(1, step2state, step2choice, stim, stimtext)
         displayreward(reward, rewardicons)
-        
-        rewtally.text = '$ ' + str(totalreward)
-        rewtally.draw()
-        itertext.draw()
+
         win.flip()
         core.wait(1.0)
         
