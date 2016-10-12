@@ -12,18 +12,34 @@ from random import shuffle
 '''
 ================================================================================
 
+    GET SUBJECT ID
+
+================================================================================
+'''
+
+infodict = {'Subject ID': ''}
+mygui = gui.DlgFromDict(dictionary=infodict, title='Two-Step Task')
+
+subject_id = infodict['Subject ID'].encode('utf8')
+
+if subject_id == '': # If no subject ID entered, quit.
+    core.quit()
+
+'''
+================================================================================
+
     EXPERIMENTAL PARAMETERS
 
 ================================================================================
 '''
 
-ntrials = 10
+ntrials = 201 # number of trials to complete
 
-lbound = 0.25
-ubound = 0.75
-sdrewardpath = 0.025
+lbound = 0.25 # lower bound on reward probabilities
+ubound = 0.75 # upper bound on reward probabilities
+sdrewardpath = 0.025 # SD of the Gaussian process for reward probabilities
 
-tlimitchoice = 3.0
+tlimitchoice = 3.0 # time limit for choices
 
 fullscreen = True
 if fullscreen is True:
@@ -404,7 +420,7 @@ while t <= ntrials-1:
 
 # Create data frame
 data = pd.DataFrame({
-    'id': 1,
+    'subject_id': subject_id,
     'step2state': states,
     'choice1'   : choices[:, 0],
     'choice2'   : choices[:, 1],
