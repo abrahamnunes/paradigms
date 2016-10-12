@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from psychopy import core, visual, event
+from psychopy import core, visual, event, gui
 import sys
 import pandas as pd
 import numpy as np
