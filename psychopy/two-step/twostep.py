@@ -33,8 +33,8 @@ if subject_id == '': # If no subject ID entered, quit.
 ================================================================================
 '''
 
-ntrain  = 5  # using 50 trials, as per Daw et al. 2011
-ntrials = 5 # number of trials to complete
+ntrain  = 50  # using 50 trials, as per Daw et al. 2011
+ntrials = 201 # number of trials to complete
 
 lbound = 0.25 # lower bound on reward probabilities
 ubound = 0.75 # upper bound on reward probabilities
