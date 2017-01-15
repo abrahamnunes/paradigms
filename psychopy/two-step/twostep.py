@@ -793,7 +793,7 @@ data = pd.DataFrame({
 })
 
 # Write to csv
-data.to_csv('testdata.csv', sep='\t', encoding='utf-8')
+data.to_csv('data_' + subject_id + '.csv', sep='\t', encoding='utf-8', index=False)
 
 '''
 ================================================================================
