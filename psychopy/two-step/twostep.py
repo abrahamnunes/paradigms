@@ -41,6 +41,7 @@ ubound = 0.75 # upper bound on reward probabilities
 sdrewardpath = 0.025 # SD of the Gaussian process for reward probabilities
 
 tlimitchoice = 3.0 # time limit for choices
+isi = 1 # intertrial interval
 
 fullscreen = True
 if fullscreen is True:
@@ -94,8 +95,6 @@ trainchars = [u'\u03E0',
               u'\u03D8',
               u'\u03EA',
               u'\u0398']
-
-isi = 1
 
 '''
 --------------------------------------------------------------------------------
@@ -382,7 +381,7 @@ trainingstep1resultmsg = visual.TextStim(win,
 
 trainingstep2resultmsg = visual.TextStim(win,
     text = 'Again, your choice will move to the top of the screen.\n\n' +
-    'You will now either receive a reward (the coin), or not (the red "X") depending on your selection.\n\n' +
+    'You will now either receive a reward (a gold coin), or not (a red "X") depending on your selection.\n\n' +
     'This sequence of steps will be repeated many times.\n\n' +
     'Before starting the actual task, we will give you 50 practice trials to become familiar with the task.\n\n'
     'Press the "Q" key to continue...',
@@ -502,24 +501,6 @@ core.wait(5.0)
 event.waitKeys(keyList=['q'])
 
 core.wait(1.0)
-
-#Review task structure
-#drawstructurestims(stim=stim, stimtext=stimtext)
-#step1options.draw()
-#step2optionsA.draw()
-#step2optionsB.draw()
-#structuredemomsg.draw()
-#win.flip()
-#core.wait(5.0)
-#event.waitKeys(keyList=['q'])
-
-#core.wait(1.0)
-
-# Review reward structure
-#rewardstructuredemomsg.draw()
-#win.flip()
-#core.wait(5.0)
-#event.waitKeys(keyList=['q'])
 
 # Introduce Practice trials
 practicetrialsmsg.draw()
