@@ -95,6 +95,8 @@ trainchars = [u'\u03E0',
               u'\u03EA',
               u'\u0398']
 
+isi = 1
+
 '''
 --------------------------------------------------------------------------------
 
@@ -119,7 +121,7 @@ respondfaster = visual.TextStim(win,
 # Done task message
 donetaskmsg = visual.TextStim(win,
     text='Great work! You\'ve successfully completed the task!\n\n' +
-         'Thank you for participating in our research study.\n\n' + 
+         'Thank you for participating in our research study.\n\n' +
          'Press the "V" key to exit.'
 )
 
@@ -317,7 +319,7 @@ def displayreward(reward, rewardicons):
 def animatechoice(step, state, sel, stim, stimtext):
     endpos = np.array([0, 0.25*monitor_height])
     startpos = stim[step][state][sel].pos
-    nframes = int(np.floor(1.0/win.monitorFramePeriod))
+    nframes = int(np.floor(0.4/win.monitorFramePeriod))
     ddist = (endpos - startpos)/nframes
     for frame in range(nframes):
         stim[step][state][sel].pos = stim[step][state][sel].pos + ddist
@@ -342,7 +344,7 @@ def animatechoice(step, state, sel, stim, stimtext):
 --------------------------------------------------------------------------------
 '''
 # Load training stimuli
-stim, stimtext, rewardicons = initgraphics(chars=trainchars, pal=trainpal)             # Initialize the stimuli
+stim, stimtext, rewardicons = initgraphics()
 
 # TEXT ELEMENTS
 
@@ -382,6 +384,7 @@ trainingstep2resultmsg = visual.TextStim(win,
     text = 'Again, your choice will move to the top of the screen.\n\n' +
     'You will now either receive a reward (the coin), or not (the red "X") depending on your selection.\n\n' +
     'This sequence of steps will be repeated many times.\n\n' +
+    'Before starting the actual task, we will give you 50 practice trials to become familiar with the task.\n\n'
     'Press the "Q" key to continue...',
     pos = [0, -0.1*monitor_height]
 )
@@ -427,8 +430,6 @@ practicetrialsmsg = visual.TextStim(win,
 donepracticemsg = visual.TextStim(win,
     text = 'Great work!\n\n' +
            'Now that you have familiarized yourself with how the task works, you are ready to perform the real trials.\n\n' +
-           'IMPORTANT: The symbols and colours now will be different than the ones in the practice trials!\n\n' +
-           'Although the choices will appear different, you are playing the same game that you learned during the practice sessions.\n\n' +
            'When you are ready to begin, press the "W" key'
 )
 
@@ -461,7 +462,7 @@ event.waitKeys(keyList=['q'])
 
 drawfixation() #fixation cross
 win.flip()
-core.wait(rnd.exponential(1.5))
+core.wait(rnd.exponential(isi))
 
 tstimorder = drawrect(0, 0, stim=stim, stimtext=stimtext) #stimuli
 ftext.draw()
@@ -496,14 +497,6 @@ tstep2choice = key2choice(tstimorder, tkeys[0][0])
 animatechoice(1, tstep2state, tstep2choice, stim, stimtext) #animate the choice
 drawselected(1, tstep2state, tstep2choice, stim, stimtext)
 trainingstep2resultmsg.draw()
-rewardicons['icon'][0].pos = [-0.5*monitor_width, -0.2*monitor_height]
-rewardicons['text'][0].pos = [-0.5*monitor_width, -0.2*monitor_height]
-rewardicons['icon'][1].pos = [0.5*monitor_width, -0.2*monitor_height]
-rewardicons['text'][1].pos = [0.5*monitor_width, -0.2*monitor_height]
-rewardicons['icon'][0].draw()
-rewardicons['text'][0].draw()
-rewardicons['icon'][1].draw()
-rewardicons['text'][1].draw()
 win.flip()
 core.wait(5.0)
 event.waitKeys(keyList=['q'])
@@ -511,22 +504,22 @@ event.waitKeys(keyList=['q'])
 core.wait(1.0)
 
 #Review task structure
-drawstructurestims(stim=stim, stimtext=stimtext)
-step1options.draw()
-step2optionsA.draw()
-step2optionsB.draw()
-structuredemomsg.draw()
-win.flip()
-core.wait(5.0)
-event.waitKeys(keyList=['q'])
+#drawstructurestims(stim=stim, stimtext=stimtext)
+#step1options.draw()
+#step2optionsA.draw()
+#step2optionsB.draw()
+#structuredemomsg.draw()
+#win.flip()
+#core.wait(5.0)
+#event.waitKeys(keyList=['q'])
 
-core.wait(1.0)
+#core.wait(1.0)
 
 # Review reward structure
-rewardstructuredemomsg.draw()
-win.flip()
-core.wait(5.0)
-event.waitKeys(keyList=['q'])
+#rewardstructuredemomsg.draw()
+#win.flip()
+#core.wait(5.0)
+#event.waitKeys(keyList=['q'])
 
 # Introduce Practice trials
 practicetrialsmsg.draw()
@@ -535,8 +528,10 @@ core.wait(5.0)
 event.waitKeys(keyList=['q'])
 
 core.wait(1.0)
+
 '''
-----------------------------------------------------------------------jfjfjsdaklffjaskldjsdfjal;skdjklsdfjfjjfff
+------------------------------------------------------------------------------
+
     PRACTICE TRIALS
 
 --------------------------------------------------------------------------------
@@ -553,7 +548,7 @@ while t <= ntrain-1:
         '''
         drawfixation()
         win.flip()
-        core.wait(rnd.exponential(1.5))
+        core.wait(rnd.exponential(isi))
 
         '''
             STEP 1
@@ -586,7 +581,7 @@ while t <= ntrain-1:
         animatechoice(0, 0, step1choice, stim, stimtext)
         drawselected(0, 0, step1choice, stim, stimtext)
         win.flip()
-        core.wait(1.5)
+        core.wait(0.1)
 
         '''
             STEP 2
@@ -618,7 +613,7 @@ while t <= ntrain-1:
         animatechoice(1, step2state, step2choice, stim, stimtext)
         drawselected(1, step2state, step2choice, stim, stimtext)
         win.flip()
-        core.wait(1.5)
+        core.wait(0.1)
 
         # Display the reward outcome
         drawselected(1, step2state, step2choice, stim, stimtext)
@@ -653,7 +648,7 @@ event.waitKeys(keyList=['w'])
 ================================================================================
 '''
 
-stim, stimtext, rewardicons = initgraphics()             # Initialize the stimuli
+#stim, stimtext, rewardicons = initgraphics()             # Initialize the stimuli
 
 paths      = np.zeros([ntrials+1, 4])          # Initialize path array
 paths[0,:] = rnd.uniform(lbound, ubound, 4)    # Set initial reward probabilities
@@ -681,7 +676,7 @@ while t <= ntrials-1:
         '''
         drawfixation()
         win.flip()
-        core.wait(rnd.exponential(1.5))
+        core.wait(rnd.exponential(isi))
 
         '''
             STEP 1
@@ -714,7 +709,7 @@ while t <= ntrials-1:
         animatechoice(0, 0, step1choice, stim, stimtext)
         drawselected(0, 0, step1choice, stim, stimtext)
         win.flip()
-        core.wait(1.5)
+        core.wait(0.1)
 
         '''
             STEP 2
@@ -746,7 +741,7 @@ while t <= ntrials-1:
         animatechoice(1, step2state, step2choice, stim, stimtext)
         drawselected(1, step2state, step2choice, stim, stimtext)
         win.flip()
-        core.wait(1.5)
+        core.wait(0.1)
 
         # Display the reward outcome
         drawselected(1, step2state, step2choice, stim, stimtext)
@@ -808,8 +803,8 @@ data.to_csv('testdata.csv', sep='\t', encoding='utf-8')
 ================================================================================
 '''
 
-donetaskmsg.draw() 
-win.flip() 
+donetaskmsg.draw()
+win.flip()
 core.wait(5.0)
 keys = event.waitKeys(keyList=['v'])
 
