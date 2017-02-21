@@ -40,6 +40,10 @@ lbound = 0.25 # lower bound on reward probabilities
 ubound = 0.75 # upper bound on reward probabilities
 sdrewardpath = 0.025 # SD of the Gaussian process for reward probabilities
 
+# Specify whether subjects will be paid per reward, and the amount that will be paid per reward gained
+pay_per_reward = True
+val_reward = 0.02 # amount to pay per reward on task
+
 tlimitchoice = 3.0 # time limit for choices
 isi = 1 # intertrial interval
 
@@ -115,13 +119,6 @@ intromessage = visual.TextStim(win,
 # Respond faster message
 respondfaster = visual.TextStim(win,
     text='You must respond faster!'
-)
-
-# Done task message
-donetaskmsg = visual.TextStim(win,
-    text='Great work! You\'ve successfully completed the task!\n\n' +
-         'Thank you for participating in our research study.\n\n' +
-         'Press the "V" key to exit.'
 )
 
 '''
@@ -783,6 +780,23 @@ data.to_csv('data_' + subject_id + '.csv', sep='\t', encoding='utf-8', index=Fal
 
 ================================================================================
 '''
+
+if pay_per_reward is True:
+    payout = np.round(val_reward * np.sum(rewards), 2)
+
+    # Done task message
+    donetaskmsg = visual.TextStim(win,
+        text='Great work! You\'ve successfully completed the task!\n\n' +
+        'Total Earnings: $' + str(payout) + '\n\n' +
+        'Thank you for participating in our research study.\n\n' +
+        'Press the "V" key to exit.'
+    )
+else:
+    donetaskmsg = visual.TextStim(win,
+        text='Great work! You\'ve successfully completed the task!\n\n' +
+        'Thank you for participating in our research study.\n\n' +
+        'Press the "V" key to exit.'
+    )
 
 donetaskmsg.draw()
 win.flip()
