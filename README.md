@@ -1,71 +1,87 @@
 # Paradigms
 
-This repository collects code for various experimental paradigms.
+A Python package built atop PsychoPy that facilitates efficient development and running of behavioural experiments.
 
-Currently, I am building only in PsychoPy, but in the future I will likely include Psychtoolbox.
+## Installing Paradigms
 
-Each task is self-contained into its own directory along with necessary resource files. To run a paradigm, simply load it into the "Coder View" in PsychoPy, then click the "Run" button.
+In your terminal or console, enter
 
-If you need to adjust screen resolution settings, you can do so in the paradigm's main file (at the topmost section of the code).
+``` bash
 
-## Contents
-- [OPSPAN](#opspan)
-- [Two-Step Task](#two-step)
+pip install git+https://github.com/ComputationalPsychiatry/paradigms.git
 
-## Current Paradigms
+```
 
-### <a name="opspan"></a> Operation Span (OPSPAN)
+## Using Paradigms
 
-This is a working memory task as described in:
+### Structure of a Behavioural Experiment
 
-- Unsworth, N. et al. (2005) An automated version of the operation span task. Behav. Res. Methods 37, 498–505
+The core structure of a behavioural experiment is as follows:
 
-Credit is owed to [Titus von der Malsburg](https://github.com/tmalsburg) for the equations and consonants file, which I took from his OPSPAN implementation [`py-span-task`](https://github.com/tmalsburg/py-span-task). Titus' package is great, and includes an R script to calculate performance.
++ `Experiment`
+    + `Paradigm`
+        + `Block`
+            + `Trial`
 
-The PsychoPy implementation I have included attempts to retain as much fidelity as possible to the implementation in Unsworth et al. (2005). Some notable exceptions include:
+This hierarchical structure makes development relatively straightforward.
 
-- Equations were all presented on one line, as in Titus von der Malsburg's version
-- Subjects type in the letters they had to memorize, rather than selecting from those placed on a grid
-- There is no feedback for number of equations correctly solved. The authors of that paper provided a visual indicator of percentage complete. I omitted this to minimize the number of elements displayed on the screen.
+First, one defines the procedures inherent in a single `Trial`, then composes these trials into a `Block`. Blocks of trials are then composed into a behavioural `Paradigm`. Finally, if one is implementing a battery of tasks, an `Experiment` may be defined (even if it only contains one `Paradigm`).
 
-#### Output
+### Defining a Trial
 
-The OPSPAN output will be a `.csv` file including the subject ID, which is collected at the outset through a GUI. The column headings are as follows:
+The `Trial` class offers a framework within which to define a specific trial for your own experiment. To create a trial for your specific behavioural paradigm, you must write a class that inherits the base `Trial` object. Within your trial object, you must create a function called `procedure()` in which the operations to carry out the trial are represented, and one called `ITI()` in which the procedure of the intertrial interval is specified.
 
-| Column Head       | Description   |
-| -----------       | ------------  |
-| `subject_id`      | The subject's unique id |
-| `iteration`       | Each span length is presented for (_n_ iterations). Default is 3 iterations for 5 spans (3-7 characters).
-| `span`            | The number of characters in the current trial. As per Unsworth et al. (2005), the default is 3 to 7 |
-| `correct`         | Binary. Whether the characters were correctly recalled at the end of a trial. |
-| `math_accuracy`   | The percentage of correct answers to equation portions |
-| `n_math_timeout`  | Number of equations in which there was a timeout. For the absolute scoring system in Unsworth et al. (2005), if the user times out on an equation during a span trial, the trials should not be counted as correct. |
-| `mathrt_mean`     | Mean reaction time for math problems |
-| `mathrt_sd`       | Standard deviation of reaction time for math problems |
-| `mathrt_max`      | Maximum reaction time during math problems for that given span trial. |
+You can also add additional functions within this subclass that are called in the `procedure()` function. So long as `procedure()` and `ITI()` are defined, the rest is up to you.
 
-### <a name="two-step"></a> Two-Step task
+``` python
 
-This is an implementation of the two-step task from the following paper:
+class MyTrial(Trial):
+    def procedure(self):
+        pass
 
-- Daw, N.D. et al. (2011) Model-based influences on humans’ choices and striatal prediction errors. Neuron 69, 1204–1215
+    def ITI(self):
+        pass
 
-My implementation does not yet have a training phase, which I am working on adding at the moment.
+```
 
-The default parameters for the task can be set at the top of the twostep.py file.
+### Composing Trials into a Block
 
-#### Output
+Blocks are more abstract than trials of an experiment, and so one does not need to define a subclass, as above in the `Trial` example. Rather, one simply instantiates a block with the trials desired:
 
-This task produces a `.csv` file with the following column headings
+``` python
 
-| Column Head   | Description   |
-| -----------   | ------------  |
-| 'subject_id'  | Subject ID, collected from initial GUI |
-| 'step2state'  | The second step state. (First step states are always the same, so they are not listed) |
-| 'choice1'     | First step choice |
-| 'choice2'     | Second step choice |
-| 'reward'      | Reward received at trial |
-| 'rt_step1'    | Step 1 choice reaction time |
-| 'rt_step2'    | Step 2 choice reaction time |
-| 'key_step1'   | Key pressed at step 1 choice. Since the stimuli are randomly alternated between the left and right sides, these keys are recorded in order to determine whether subjects are not pressing the same key for most trials. |
-| 'key_step2'   | Key pressed at step 2 choice |
+my_block = Block(trials=[MyTrial()],
+                 n_trials=100,
+                 strict_count=False,
+                 trial_order='random',
+                 label='My Block')
+
+```
+
+### Composing Blocks into a Paradigm
+
+This step follows in much the same fashion as composition of a `Block`, except that instead of putting together trials, one is putting together blocks.
+
+``` python
+
+my_paradigm = Paradigm(blocks=[my_block], label='My Paradigm')
+
+```
+
+### Defining an Experiment
+
+While at face value, the `Experiment` object may seem redundant, it is an important space within which do define the "hyperparameters" which include equipment specifications, subject identification, etc.
+
+``` python
+
+my_experiment = Experiment(paradigms=[my_paradigm])
+
+```
+
+## The Behavioural Data Format (BDF)
+
+We have created a general structure for representing the results of behavioural experiments, and implemented it in a fashion that facilitates easy output into various formats (i.e. Pandas DataFrame objects, CSV), and especially facilitates interoperability with our model fitting package, [`Fitr`](https://github.com/ComputationalPsychiatry/fitr).
+
+Data stored in BDF can also be rendered in a text file that is easy to read (trial by trial) and includes valuable data in a header section.
+
+Moreover, BDF offers useful functions for screening behavioural data for anomalies, so that bad data can be screened out prior to the analysis phase of your project.
