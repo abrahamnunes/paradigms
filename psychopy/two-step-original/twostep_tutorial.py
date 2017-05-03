@@ -9,8 +9,7 @@ import numpy.random as rnd
 import matplotlib.pyplot as plt
 from random import shuffle
 
-from twostepstim import Trials, loadstimuli
-from twostep_utils import *
+from twostepcore import *
 
 '''
 ================================================================================
@@ -36,17 +35,19 @@ if subject_id == '': # If no subject ID entered, quit.
 ================================================================================
 '''
 
-ntrain  = 50  # using 50 trials, as per Daw et al. 2011
-
-transprob = 0.7 # probability of the correct transition
-lbound = 0.25 # lower bound on reward probabilities
-ubound = 0.75 # upper bound on reward probabilities
-sdrewardpath = 0.025 # SD of the Gaussian process for reward probabilities
+ntrain       = 50    # using 50 trials, as per Daw et al. 2011
+ptrans       = 0.7   # Probability of the correct transition
+preward_low  = 0.25  # lower bound on reward probabilities
+preward_high = 0.75  # upper bound on reward probabilities
+preward_sd   = 0.025 # SD of the Gaussian process for reward probabilities
+tlimitchoice = 3     # Time limit for making a choice (sec)
+t_transition = 0.4   # Time during transition animations (sec)
+ititime      = 1     # Mean of exponentially distributed ITI time (sec)
 
 fullscreen = True
 if fullscreen is True:
-    monitor_width  = 1920.
-    monitor_height = 1080.
+    monitor_width  = 1024.
+    monitor_height = 768.
 else:
     monitor_width  = 500
     monitor_height = 500
@@ -135,7 +136,6 @@ visual.TextStim(win,
 ).draw()
 win.flip()
 event.waitKeys()
-
 """
 # Screen 2
 visual.TextStim(win,
@@ -369,7 +369,7 @@ for i in range(len(outcome)):
         core.wait(2.0)
 
 visual.TextStim(win,
-    text='Total number of wins = 9\n\n' +
+    text='Total number of wins = 7\n\n' +
     'Note that rewards are marked with a coin (with the "$" sign), whereas non-rewards are marked with an empty circle.\n\n' +
     'The "non-reward" outcome (i.e. the empty circle) simply means that you did not receive a reward. It does NOT mean that you lose any rewards you have already gained.\n\n' +
     'Press any key to continue.'
@@ -663,7 +663,7 @@ while learned_reward is False:
 visual.TextStim(win,
     text='The actual game will be harder for two reasons.\n\n' +
     'First, there are more boxes to keep track of (we will go over this more in a moment)\n\n' +
-    'Second, the chance that a box contains money will change slowly over time. We wil go over this point in more detail now.\n\n' +
+    'Second, the chance that a box contains money will change slowly over time. We will go over this point in more detail now.\n\n' +
     'Press "c" to continue.'
 ).draw()
 win.flip()
@@ -1282,6 +1282,7 @@ visual.TextStim(win,
 win.flip()
 event.waitKeys(keyList=['c'])
 """
+
 """
 ================================================================================
 
@@ -1297,13 +1298,68 @@ trials = Trials(subject_id=subject_id,
                 state_b_stim=tutorialstim[1],
                 state_c_stim=tutorialstim[2],
                 reward_stim=rewardstim,
-                ntrials=50,
+                ntrials=ntrain,
+                block=1,
                 boxpos=boxpos,
-                tutorial=True)
+                tutorial=True,
+                ptrans=ptrans,
+                preward_low=preward_low,
+                preward_high=preward_high,
+                preward_sd=preward_sd,
+                tlimitchoice=tlimitchoice,
+                t_transition=t_transition,
+                ititime=ititime)
 
 trials.run()
 trials.savedata()
 trials.plotrewardpaths()
+
+"""
+================================================================================
+
+    CLOSING HINTS
+
+================================================================================
+"""
+
+"""
+# Screen 34
+visual.TextStim(win,
+    text='That is the end of the practice game.\n\n' +
+    'You got ' + str(np.nansum(trials.data['r'])) + ' rewards!\n\n' +
+    'We are now nearly at the end of the tutorial. Before playing the real game, we want to give you a few last helpful hints.\n\n'
+    'Press "c" to continue.',
+    pos=[0, textypos['top']]
+).draw()
+win.flip()
+event.waitKeys(keyList=['c'])
+
+# Screen 35
+visual.TextStim(win,
+    text='Hints:\n\n' +
+    'The first choice in the trial is also important. This is because it influences which colour of money boxes you will get, and often one colour will be better than the other.\n\n' +
+    'As such, you can earn more money by figuring out which initial choices work better.\n\n' +
+    'Press any key to continue.',
+    pos=[0, textypos['top']]
+).draw()
+win.flip()
+event.waitKeys()
+
+visual.TextStim(win,
+    text='Hints:\n\n' +
+    'Remember, none of the boxes know what the others are doing. Just because one box is poor does not mean any others have to be rich.\n\n' +
+    'Also, the way the money boxes change is not synchronized or patterned. You DONT have to bother looking for patterns such as:\n' +
+    '     - Win-lose-win-lose\n' +
+    '     - Wins on one colour following wins on another\n' +
+    '     - The best box moving predictably from one color to the next\n\n' +
+    'The computer is not trying to catch you or trick you.\n\n' +
+    'Remember, it is a game of both skill and chance, so good luck!\n\n' +
+    'Press "c"to continue.',
+    pos=[0, textypos['top']]
+).draw()
+win.flip()
+event.waitKeys(keyList=['c'])
+"""
 
 win.close()
 core.quit()

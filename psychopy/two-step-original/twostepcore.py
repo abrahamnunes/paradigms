@@ -4,7 +4,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
-from twostep_utils import *
+def drawatpos(stim, xpos, ypos):
+    stim.pos = (xpos, ypos)
+    stim.draw()
+
+def animatechoice(win, stim, endpos_x, endpos_y, animate_duration=0.4):
+    endpos = [endpos_x, endpos_y]
+    startpos = stim.pos
+    nframes = int(np.floor(animate_duration/win.monitorFramePeriod))
+    ddist = (endpos - startpos)/nframes
+    for frame in range(nframes):
+        stim.pos = stim.pos + ddist
+        stim.draw()
+        win.flip()
 
 class Trials(object):
     """
@@ -25,6 +37,8 @@ class Trials(object):
         Reward and non-reward stimuli
     ntrials : int > 0
         Number of trials to create
+    block : int > 0
+        Which block of trials this will be (for naming output files)
     boxpos : dict
         Dictionary specifying box positions
     tutorial : bool
@@ -45,8 +59,9 @@ class Trials(object):
         Average duration (seconds) of intertrial interval (mean of exp distrib)
 
     """
-    def __init__(self, subject_id, win, state_a_stim, state_b_stim, state_c_stim, reward_stim, ntrials, boxpos, tutorial=False, ptrans=0.7, preward_low=0.25, preward_high=0.75, preward_sd=0.025, tlimitchoice=3, t_transition=0.4, ititime=1):
+    def __init__(self, subject_id, win, state_a_stim, state_b_stim, state_c_stim, reward_stim, ntrials, block, boxpos, tutorial=False, ptrans=0.7, preward_low=0.25, preward_high=0.75, preward_sd=0.025, tlimitchoice=3, t_transition=0.4, ititime=1):
         self.subject_id = subject_id
+        self.block = block
         self.win = win
         self.states = {
             0 : {
@@ -147,17 +162,6 @@ class Trials(object):
             for i in [1, 2]:
                 for j in [0, 1]:
                     self.states[i][j]['preward'].append(np.maximum(np.minimum(self.states[i][j]['preward'][-1] + self.preward_sd*np.random.normal(0, 1), self.preward_high), self.preward_low))
-
-    def plotrewardpaths(self):
-        fig, ax = plt.subplots()
-        for i in [1, 2]:
-            for j in [0, 1]:
-                ax.plot(np.arange(self.ntrials), self.states[i][j]['preward'], label='Option (' + str(i) + ', ' + str(j) + ')')
-        ax.set_title('Step 2 Reward Probabilities')
-        ax.set_ylabel('Reward Probability')
-        ax.set_xlabel('Trial')
-        plt.legend()
-        plt.savefig('rewardpaths.png')
 
     def step1(self):
         # Randomize stimuli to L/R
@@ -366,15 +370,48 @@ class Trials(object):
                 self.sample_reward()
                 self.t += 1
 
-        self.win.close()
-
     def savedata(self):
 
         # Save data
         self.data['subject_id'] = [self.subject_id]*len(self.data['trial'])
+        self.data['rprob_10'] = self.states[1][0]['preward']
+        self.data['rprob_11'] = self.states[1][1]['preward']
+        self.data['rprob_20'] = self.states[2][0]['preward']
+        self.data['rprob_21'] = self.states[2][1]['preward']
+
         df = pd.DataFrame.from_dict(self.data)
 
-        df.to_csv('twostep-tut-' + self.subject_id + '.csv', index=False)
+        # Now process data into theory-free analysis form
+        df_inc = df.ix[df.aborted == 0, :]
+        last_a = df_inc.a1[:-1]
+        curr_a = df_inc.a1[1:]
+        tf_df = pd.DataFrame(data = {
+            'subject_id'    : df_inc.subject_id[:-1].values,
+            'stay'          : np.equal(last_a, curr_a).astype(int),
+            'last_trans'    : df_inc.trans_cr[:-1].values,
+            'last_rewarded' : df_inc.r[:-1].values,
+            'rt2'           : df_inc.rt2[1:].values
+            }, index=None)
+
+        if self.tutorial is True:
+            df.to_csv('twostep-raw-tut-' + self.subject_id + '-block-' + str(self.block) + '.csv',
+                      index=False)
+            tf_df.to_csv('twostep-tf-tut-' + self.subject_id + '-block-' + str(self.block) + '.csv',
+                         index=False)
+        else:
+            df.to_csv('twostep-raw-'   + self.subject_id + '-block-' + str(self.block) + '.csv', index=False)
+            tf_df.to_csv('twostep-tf-' + self.subject_id + '-block-' + str(self.block) + '.csv', index=False)
+
+    def plotrewardpaths(self):
+        fig, ax = plt.subplots()
+        for i in [1, 2]:
+            for j in [0, 1]:
+                ax.plot(np.arange(self.ntrials), self.states[i][j]['preward'], label='Option (' + str(i) + ', ' + str(j) + ')')
+        ax.set_title('Step 2 Reward Probabilities, Subject ' + self.subject_id)
+        ax.set_ylabel('Reward Probability')
+        ax.set_xlabel('Trial')
+        plt.legend()
+        plt.savefig('rewardpaths.png')
 
 
 def loadstimuli(win, stim_set, stim_size):
@@ -469,41 +506,47 @@ def loadstimuli(win, stim_set, stim_size):
     }
 
     taskstim = {
-        0: {
-            'norm': vis.ImageStim(win, image='behavioural/Stim1.PNG', units='pix', size=stim_size),
-            'act': vis.ImageStim(win, image='behavioural/Stim1-a.PNG', units='pix', size=stim_size),
-            'deact': vis.ImageStim(win, image='behavioural/Stim1-d.PNG', units='pix', size=stim_size),
-            'spoiled': vis.ImageStim(win, image='behavioural/Stim1-s.PNG', units='pix', size=stim_size)
+        0 : {
+            0: {
+                'norm': vis.ImageStim(win, image='behavioural/Stim1.PNG', units='pix', size=stim_size),
+                'act': vis.ImageStim(win, image='behavioural/Stim1-a.PNG', units='pix', size=stim_size),
+                'deact': vis.ImageStim(win, image='behavioural/Stim1-d.PNG', units='pix', size=stim_size),
+                'spoiled': vis.ImageStim(win, image='behavioural/Stim1-s.PNG', units='pix', size=stim_size)
+            },
+            1: {
+                'norm': vis.ImageStim(win, image='behavioural/Stim2.PNG', units='pix', size=stim_size),
+                'act': vis.ImageStim(win, image='behavioural/Stim2-a.PNG', units='pix', size=stim_size),
+                'deact': vis.ImageStim(win, image='behavioural/Stim2-d.PNG', units='pix', size=stim_size),
+                'spoiled': vis.ImageStim(win, image='behavioural/Stim2-s.PNG', units='pix', size=stim_size)
+            }
         },
-        1: {
-            'norm': vis.ImageStim(win, image='behavioural/Stim2.PNG', units='pix', size=stim_size),
-            'act': vis.ImageStim(win, image='behavioural/Stim2-a.PNG', units='pix', size=stim_size),
-            'deact': vis.ImageStim(win, image='behavioural/Stim2-d.PNG', units='pix', size=stim_size),
-            'spoiled': vis.ImageStim(win, image='behavioural/Stim2-s.PNG', units='pix', size=stim_size)
+        1 : {
+            0: {
+                'norm': vis.ImageStim(win, image='behavioural/Stim3.PNG', units='pix', size=stim_size),
+                'act': vis.ImageStim(win, image='behavioural/Stim3-a.PNG', units='pix', size=stim_size),
+                'deact': vis.ImageStim(win, image='behavioural/Stim3-d.PNG', units='pix', size=stim_size),
+                'spoiled': vis.ImageStim(win, image='behavioural/Stim3-s.PNG', units='pix', size=stim_size)
+            },
+            1: {
+                'norm': vis.ImageStim(win, image='behavioural/Stim4.PNG', units='pix', size=stim_size),
+                'act': vis.ImageStim(win, image='behavioural/Stim4-a.PNG', units='pix', size=stim_size),
+                'deact': vis.ImageStim(win, image='behavioural/Stim4-d.PNG', units='pix', size=stim_size),
+                'spoiled': vis.ImageStim(win, image='behavioural/Stim4-s.PNG', units='pix', size=stim_size)
+            }
         },
-        2: {
-            'norm': vis.ImageStim(win, image='behavioural/Stim3.PNG', units='pix', size=stim_size),
-            'act': vis.ImageStim(win, image='behavioural/Stim3-a.PNG', units='pix', size=stim_size),
-            'deact': vis.ImageStim(win, image='behavioural/Stim3-d.PNG', units='pix', size=stim_size),
-            'spoiled': vis.ImageStim(win, image='behavioural/Stim3-s.PNG', units='pix', size=stim_size)
-        },
-        3: {
-            'norm': vis.ImageStim(win, image='behavioural/Stim4.PNG', units='pix', size=stim_size),
-            'act': vis.ImageStim(win, image='behavioural/Stim4-a.PNG', units='pix', size=stim_size),
-            'deact': vis.ImageStim(win, image='behavioural/Stim4-d.PNG', units='pix', size=stim_size),
-            'spoiled': vis.ImageStim(win, image='behavioural/Stim4-s.PNG', units='pix', size=stim_size)
-        },
-        4: {
-            'norm': vis.ImageStim(win, image='behavioural/Stim5.PNG', units='pix', size=stim_size),
-            'act': vis.ImageStim(win, image='behavioural/Stim5-a.PNG', units='pix', size=stim_size),
-            'deact': vis.ImageStim(win, image='behavioural/Stim5-d.PNG', units='pix', size=stim_size),
-            'spoiled': vis.ImageStim(win, image='behavioural/Stim5-s.PNG', units='pix', size=stim_size)
-        },
-        5: {
-            'norm': vis.ImageStim(win, image='behavioural/Stim6.PNG', units='pix', size=stim_size),
-            'act': vis.ImageStim(win, image='behavioural/Stim6-a.PNG', units='pix', size=stim_size),
-            'deact': vis.ImageStim(win, image='behavioural/Stim6-d.PNG', units='pix', size=stim_size),
-            'spoiled': vis.ImageStim(win, image='behavioural/Stim6-s.PNG', units='pix', size=stim_size)
+        2 : {
+            0: {
+                'norm': vis.ImageStim(win, image='behavioural/Stim5.PNG', units='pix', size=stim_size),
+                'act': vis.ImageStim(win, image='behavioural/Stim5-a.PNG', units='pix', size=stim_size),
+                'deact': vis.ImageStim(win, image='behavioural/Stim5-d.PNG', units='pix', size=stim_size),
+                'spoiled': vis.ImageStim(win, image='behavioural/Stim5-s.PNG', units='pix', size=stim_size)
+            },
+            1: {
+                'norm': vis.ImageStim(win, image='behavioural/Stim6.PNG', units='pix', size=stim_size),
+                'act': vis.ImageStim(win, image='behavioural/Stim6-a.PNG', units='pix', size=stim_size),
+                'deact': vis.ImageStim(win, image='behavioural/Stim6-d.PNG', units='pix', size=stim_size),
+                'spoiled': vis.ImageStim(win, image='behavioural/Stim6-s.PNG', units='pix', size=stim_size)
+            }
         }
     }
 
