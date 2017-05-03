@@ -1,5 +1,27 @@
 from psychopy import visual as vis
 
+class activestim(object):
+    """
+    Stimuli that are activated for the task
+
+    Attributes
+    ----------
+    state_a : dict
+        Pair of stimuli for the first step
+    state_b : dict
+        One pair of stimuli for the second step
+    state_c : dict
+        The other pair of stimuli for the second step
+    """
+    def __init__(self, state_a, state_b, state_c):
+        self.state_a = state_a
+        self.state_b = state_b
+        self.state_c = state_c
+
+        self.ptrans = np.array([[0.7, 0.3], [0.3, 0.7]])
+
+        #FINISH THIS
+
 def loadstimuli(win, stim_set, stim_size):
     """
     Loads stimuli for the task

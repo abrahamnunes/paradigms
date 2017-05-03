@@ -857,7 +857,7 @@ drawatpos(tutorialstim[2][1]['norm'],
 
 visual.TextStim(win,
     text='Press any key',
-    pos=[0, -0.5*monitor_height]
+    pos=[0, -0.6*monitor_height]
 ).draw()
 win.flip()
 event.waitKeys()
@@ -884,7 +884,7 @@ visual.TextStim(win,
 win.flip()
 event.waitKeys()
 
-# Screen 26
+# Screen 27
 visual.TextStim(win,
     text='Give it a try. Choose between one of these boxes and notice that you will then be shown one of the two pairs of money boxes.\n\nThen choose between the money boxes to get a chance at winning a reward.\n\nRemember use "f" to select the left box, and "j" to select the right box.',
     pos=[0, textypos['top']]
@@ -1100,6 +1100,209 @@ elif keypress[0][0] == 'j':
                   ypos=boxpos['y']['low'])
         win.flip()
         core.wait(2)
+
+#Screen 28
+visual.TextStim(win,
+    text='Just like the money boxes, these boxes are somewhat unpredictable.',
+    pos=[0, textypos['top']]
+).draw()
+drawatpos(tutorialstim[0][0]['norm'],
+          xpos=boxpos['x']['left'],
+          ypos=boxpos['y']['neutral'])
+drawatpos(tutorialstim[0][1]['norm'],
+          xpos=boxpos['x']['right'],
+          ypos=boxpos['y']['neutral'])
+visual.TextStim(win,
+    text='Press any key',
+    pos=[0, textypos['bottom']]
+).draw()
+win.flip()
+event.waitKeys()
+
+visual.TextStim(win,
+    text='For instance, this one might lead to the purple boxes 7 times out of 10, and to the turquoise boxes 3 out of 10 times.',
+    pos=[0, textypos['top']]
+).draw()
+drawatpos(tutorialstim[0][0]['act'],
+          xpos=boxpos['x']['left'],
+          ypos=boxpos['y']['neutral'])
+drawatpos(tutorialstim[0][1]['deact'],
+          xpos=boxpos['x']['right'],
+          ypos=boxpos['y']['neutral'])
+visual.TextStim(win,
+    text='Press any key',
+    pos=[0, textypos['bottom']]
+).draw()
+win.flip()
+event.waitKeys()
+
+visual.TextStim(win,
+    text='Whereas this one might lead to the turquoise boxes 7 out of 10 times, and to the purple boxes 3 out of 10 times.',
+    pos=[0, textypos['top']]
+).draw()
+drawatpos(tutorialstim[0][0]['deact'],
+          xpos=boxpos['x']['left'],
+          ypos=boxpos['y']['neutral'])
+drawatpos(tutorialstim[0][1]['act'],
+          xpos=boxpos['x']['right'],
+          ypos=boxpos['y']['neutral'])
+visual.TextStim(win,
+    text='If these were the chances, and the box with the most money were a turquoise box, then at the first step you would want to choose the highlighted box above.\n\n'+
+    'Again, what matters is the box colour and symbol, not what side it appears on.\n\n' +
+    'Press any key',
+    pos=[0, textypos['bottom']]
+).draw()
+win.flip()
+event.waitKeys()
+
+visual.TextStim(win,
+    text='Unlike the chances of finding money in the other boxes, the chances of these boxes leading to different coloured money boxes do NOT change over time.',
+    pos=[0, textypos['top']]
+).draw()
+drawatpos(tutorialstim[0][0]['norm'],
+          xpos=boxpos['x']['left'],
+          ypos=boxpos['y']['neutral'])
+drawatpos(tutorialstim[0][1]['norm'],
+          xpos=boxpos['x']['right'],
+          ypos=boxpos['y']['neutral'])
+visual.TextStim(win,
+    text='Of course, you will still have to figure out what they are.\n\n'+
+    'Press any key',
+    pos=[0, textypos['bottom']]
+).draw()
+win.flip()
+event.waitKeys()
+
+visual.TextStim(win,
+    text='Note that when you choose a purple or turquoise box, your chance of winning money depends only on its colour and symbol, not which orange box you chose to get it.\n\n' + 'The choice you make between the orange boxes is still important because it can help you get whichever pair of money boxes contains more money.',
+    pos=[0, textypos['top']]
+).draw()
+drawatpos(tutorialstim[0][0]['norm'],
+          xpos=boxpos['x']['left'],
+          ypos=boxpos['y']['neutral'])
+drawatpos(tutorialstim[0][1]['norm'],
+          xpos=boxpos['x']['right'],
+          ypos=boxpos['y']['neutral'])
+visual.TextStim(win,
+    text='Of course, the best money box will change over time.\n\n'+
+    'Press any key',
+    pos=[0, textypos['bottom']]
+).draw()
+win.flip()
+event.waitKeys()
+
+# Screen 29
+visual.TextStim(win,
+    text='This may all sound complicated, so lets review.\n\n' +
+    'Press "c" to continue',
+    pos=[0, textypos['top']]
+).draw()
+win.flip()
+event.waitKeys(keyList=['c'])
+
+# Screen 30
+visual.TextStim(win,
+    text='These boxes are two games of figuring out which one has a better chance of money.\n\n' +
+    'For each box, the chances of winning money changes slowly over time in a random way.',
+    pos=[0, textypos['top']]
+).draw()
+
+drawatpos(tutorialstim[1][0]['norm'],
+          xpos=boxpos['x']['left'],
+          ypos=boxpos['y']['neutral']+0.1*monitor_height)
+drawatpos(tutorialstim[1][1]['norm'],
+        xpos=boxpos['x']['right'],
+        ypos=boxpos['y']['neutral']+0.1*monitor_height)
+drawatpos(tutorialstim[2][0]['norm'],
+          xpos=boxpos['x']['left'],
+          ypos=boxpos['y']['neutral']-0.35*monitor_height)
+drawatpos(tutorialstim[2][1]['norm'],
+        xpos=boxpos['x']['right'],
+        ypos=boxpos['y']['neutral']-0.35*monitor_height)
+
+visual.TextStim(win,
+    text='Press any key',
+    pos=[0, -0.6*monitor_height]
+).draw()
+win.flip()
+event.waitKeys()
+
+# Screen 31
+visual.TextStim(win,
+    text='On top of that game is another one of figuring out which box is better.\n\n' +
+    'This is also like what you played before, except with these boxes.',
+    pos=[0, textypos['top']]
+).draw()
+drawatpos(tutorialstim[0][0]['norm'],
+          xpos=boxpos['x']['left'],
+          ypos=boxpos['y']['neutral'])
+drawatpos(tutorialstim[0][1]['norm'],
+          xpos=boxpos['x']['right'],
+          ypos=boxpos['y']['neutral'])
+visual.TextStim(win,
+    text='You dont win money directly: you win the chance to win money in the other game. That is, a better box will take you to a game with a better chance of winning money.\n\n'+
+    'Press any key',
+    pos=[0, textypos['bottom']]
+).draw()
+win.flip()
+event.waitKeys()
+
+# Screen 32
+visual.TextStim(win,
+    text='Lets put it all together into an example game.\n\nIn this practice you wont be winning real money.\n\nYou will do the task for 50 trials, which is less than 10 minutes.\n\n' +
+    'Press any key to continue',
+    pos=[0, textypos['top']]
+).draw()
+win.flip()
+event.waitKeys()
+
+visual.TextStim(win,
+    text='If you take too long to make a choice, the trial will abort.\n\nIn this case, you will see the red Xs on the screen and a new trial will start.',
+    pos=[0, textypos['top']]
+).draw()
+drawatpos(tutorialstim[0][0]['spoiled'],
+          xpos=boxpos['x']['left'],
+          ypos=boxpos['y']['neutral'])
+drawatpos(tutorialstim[0][1]['spoiled'],
+          xpos=boxpos['x']['right'],
+          ypos=boxpos['y']['neutral'])
+visual.TextStim(win,
+    text='Dont feel rushed, but please try to enter a choice on every trial.\n\n'+
+    'Press any key',
+    pos=[0, textypos['bottom']]
+).draw()
+win.flip()
+event.waitKeys()
+
+# Screen 33
+visual.TextStim(win,
+    text='Good luck! Remember that "f" selects left and "j" selects right.\n\nPress "c" to start the practice.',
+    pos=[0, textypos['top']]
+).draw()
+win.flip()
+event.waitKeys(keyList=['c'])
+
+"""
+================================================================================
+
+    PRACTICE TRIALS
+
+================================================================================
+"""
+
+np.random.seed(seed=333)
+# Assign reward and transition probabilities to stimuli
+stimset = activate_stimuli(step1_stim=tutorialstim[0],
+                           step2_stimA=tutorialstim[1],
+                           step2_stimB=tutorialstim[2])
+
+for t in range(ntrials):
+
+    # First level
+
+
+    # Transition
+    # Second level
 
 
 win.close()
