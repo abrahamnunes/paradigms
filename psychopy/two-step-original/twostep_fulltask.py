@@ -20,12 +20,16 @@ from twostepcore import *
 '''
 
 infodict = {
-    'Subject ID': '',
-    'Block'     : ''}
+    'Subject ID'       : '',
+    'Block'            : '1',
+    'Trials per Block' : '201'
+    }
+
 mygui = gui.DlgFromDict(dictionary=infodict, title='Two-Step Task')
 
 subject_id = infodict['Subject ID'].encode('utf8')
 block = infodict['Block'].encode('utf8')
+trials_per_block = infodict['Trials per Block'].encode('utf8')
 
 if subject_id == '': # If no subject ID entered, quit.
     core.quit()
@@ -35,6 +39,11 @@ if block == '': # If no block number entered, quit.
 else:
     block = int(block)
 
+if trials_per_block == '':
+    core.quit()
+else:
+    trials_per_block = int(trials_per_block)
+
 '''
 ================================================================================
 
@@ -43,14 +52,14 @@ else:
 ================================================================================
 '''
 
-trials_per_block = 5      # using 75 trials per block
-ptrans           = 0.7     # Probability of the correct transition
-preward_low      = 0.25    # lower bound on reward probabilities
-preward_high     = 0.75    # upper bound on reward probabilities
-preward_sd       = 0.025   # SD of the Gaussian process reward prob
-tlimitchoice     = 3       # Time limit for making a choice (sec)
-t_transition     = 0.4     # Time during transition animations (sec)
-ititime          = 1       # Mean of exponentially distributed ITI time (sec)
+trials_per_block = trials_per_block  # using 75 trials per block
+ptrans           = 0.7               # Probability of the correct transition
+preward_low      = 0.25              # lower bound on reward probabilities
+preward_high     = 0.75              # upper bound on reward probabilities
+preward_sd       = 0.025             # SD of Gaussian process reward prob
+tlimitchoice     = 3                 # Time limit for making a choice (s)
+t_transition     = 0.4               # Time during transition animation (s)
+ititime          = 0.5               # Mean of expon distrib ITI time (s)
 
 fullscreen = True
 if fullscreen is True:

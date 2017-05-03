@@ -152,10 +152,8 @@ class Trials(object):
             for j in [0, 1]:
                 self.states[i][j]['preward'].append(np.random.uniform(self.preward_low, self.preward_high))
 
-                # If this is a tutorial, use the predefined reward paths
-                if self.tutorial is True:
-                    for t in range(self.ntrials-1):
-                        self.states[i][j]['preward'].append(np.maximum(np.minimum(self.states[i][j]['preward'][-1] + self.preward_sd*np.random.normal(0, 1), self.preward_high), self.preward_low))
+                for t in range(self.ntrials-1):
+                    self.states[i][j]['preward'].append(np.maximum(np.minimum(self.states[i][j]['preward'][-1] + self.preward_sd*np.random.normal(0, 1), self.preward_high), self.preward_low))
 
     def _updaterewardpaths(self):
 
