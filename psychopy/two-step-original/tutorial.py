@@ -9,7 +9,7 @@ import numpy.random as rnd
 import matplotlib.pyplot as plt
 from random import shuffle
 
-from twostepstim import loadstimuli
+from twostepstim import Trials, loadstimuli
 from twostep_utils import *
 
 '''
@@ -45,8 +45,8 @@ sdrewardpath = 0.025 # SD of the Gaussian process for reward probabilities
 
 fullscreen = True
 if fullscreen is True:
-    monitor_width  = 1024.
-    monitor_height = 768.
+    monitor_width  = 1920.
+    monitor_height = 1080.
 else:
     monitor_width  = 500
     monitor_height = 500
@@ -826,7 +826,7 @@ visual.TextStim(win,
 ).draw()
 win.flip()
 event.waitKeys()
-"""
+
 
 #Screen 24
 visual.TextStim(win,
@@ -1281,7 +1281,7 @@ visual.TextStim(win,
 ).draw()
 win.flip()
 event.waitKeys(keyList=['c'])
-
+"""
 """
 ================================================================================
 
@@ -1290,20 +1290,20 @@ event.waitKeys(keyList=['c'])
 ================================================================================
 """
 
-np.random.seed(seed=333)
 # Assign reward and transition probabilities to stimuli
-stimset = activate_stimuli(step1_stim=tutorialstim[0],
-                           step2_stimA=tutorialstim[1],
-                           step2_stimB=tutorialstim[2])
+trials = Trials(subject_id=subject_id,
+                win=win,
+                state_a_stim=tutorialstim[0],
+                state_b_stim=tutorialstim[1],
+                state_c_stim=tutorialstim[2],
+                reward_stim=rewardstim,
+                ntrials=50,
+                boxpos=boxpos,
+                tutorial=True)
 
-for t in range(ntrials):
-
-    # First level
-
-
-    # Transition
-    # Second level
-
+trials.run()
+trials.savedata()
+trials.plotrewardpaths()
 
 win.close()
 core.quit()

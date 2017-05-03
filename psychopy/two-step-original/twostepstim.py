@@ -1,26 +1,381 @@
+from psychopy import core, event, gui
 from psychopy import visual as vis
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
 
-class activestim(object):
+from twostep_utils import *
+
+class Trials(object):
     """
     Stimuli that are activated for the task
 
     Attributes
     ----------
-    state_a : dict
+    subject_id : str
+        Subject identifier
+    win : psychopy window object
+    state_a_stim : dict
         Pair of stimuli for the first step
-    state_b : dict
+    state_b_stim : dict
         One pair of stimuli for the second step
-    state_c : dict
+    state_c_stim : dict
         The other pair of stimuli for the second step
+    reward_stim : dict
+        Reward and non-reward stimuli
+    ntrials : int > 0
+        Number of trials to create
+    boxpos : dict
+        Dictionary specifying box positions
+    tutorial : bool
+        Whether this is for tutorial (sets reward probabilities the same for all subjects).
+    ptrans : float on interval [0, 1]
+        The major transition probability. Minor transition probability will be 1-ptrans
+    preward_low : float on interval [0, 1]
+        Lower bound on reward probability
+    preward_high : float on interval [0, 1]
+        Upper bound on reward probability
+    preward_sd : float
+        Standard deviation of Gaussian random walk
+    tlimitchoice : float > 0
+        Time limit for choices (in seconds)
+    t_transition : float > 0
+        Duration of transitions
+    ititime : float > 0
+        Average duration (seconds) of intertrial interval (mean of exp distrib)
+
     """
-    def __init__(self, state_a, state_b, state_c):
-        self.state_a = state_a
-        self.state_b = state_b
-        self.state_c = state_c
+    def __init__(self, subject_id, win, state_a_stim, state_b_stim, state_c_stim, reward_stim, ntrials, boxpos, tutorial=False, ptrans=0.7, preward_low=0.25, preward_high=0.75, preward_sd=0.025, tlimitchoice=3, t_transition=0.4, ititime=1):
+        self.subject_id = subject_id
+        self.win = win
+        self.states = {
+            0 : {
+                'id' : 0,
+                0 : {
+                    'id' : 0,
+                    'stim': state_a_stim[0],
+                    'ptrans': [ptrans, 1-ptrans]
+                },
+                1 : {
+                    'id' : 1,
+                    'stim': state_a_stim[1],
+                    'ptrans': [1-ptrans, ptrans]
+                }
+            },
+            1 : {
+                'id' : 1,
+                0 : {
+                    'id' : 0,
+                    'stim': state_b_stim[0],
+                    'preward' : []
+                },
+                1 : {
+                    'id' : 1,
+                    'stim': state_b_stim[1],
+                    'preward' : []
+                }
+            },
+            2 : {
+                'id' : 2,
+                0 : {
+                    'id' : 0,
+                    'stim': state_c_stim[0],
+                    'preward' : []
+                },
+                1 : {
+                    'id' : 1,
+                    'stim': state_c_stim[1],
+                    'preward' : []
+                }
+            }
+        }
+        self.reward_stim = reward_stim
+        self.boxpos = boxpos
 
-        self.ptrans = np.array([[0.7, 0.3], [0.3, 0.7]])
+        self.preward_low = preward_low
+        self.preward_high = preward_high
+        self.preward_sd = preward_sd
+        self.ntrials = ntrials
+        self.tutorial = tutorial
+        self.tlimitchoice = tlimitchoice
+        self.t_transition = t_transition
+        self.ititime = ititime
 
-        #FINISH THIS
+        self._initrewardpaths()
+
+        # Set counters and data arrays
+        self.t = 0 # current trial
+        self.step1_lrsequence = []
+        self.step2_lrsequence = []
+
+        self.trial_aborted = False # whether last trial was aborted
+        self.curr_stim = {} # current stimuli (left and right)
+        self.a1 = 999 # Placeholder for the choice at step 1
+        self.a2 = 999 # Placeholder for the choice at step 2
+        self.s2 = 999 # Placeholder for the state at step 2
+
+        self.data = {
+            'trial'    : [], # Trial index
+            'aborted'  : [],
+            'a1'       : [], # First step choice
+            'a1_key'   : [], # Keypress at first step
+            'rt1'      : [], # Reaction time at step 1
+            's2'       : [], # Second step state
+            'a2'       : [], # Second step choice
+            'a2_key'   : [], # Keypress at second step
+            'rt2'      : [], # Reaction time at step 2
+            'r'        : [], # Trial rewarded (1) or not (0)
+            'trans_cr' : []  # Common (1) or rare (0) transition
+        }
+
+    def _initrewardpaths(self):
+
+        if self.tutorial is True:
+            np.random.seed(seed=12345)
+
+        for i in [1, 2]:
+            for j in [0, 1]:
+                self.states[i][j]['preward'].append(np.random.uniform(self.preward_low, self.preward_high))
+
+                # If this is a tutorial, use the predefined reward paths
+                if self.tutorial is True:
+                    for t in range(self.ntrials-1):
+                        self.states[i][j]['preward'].append(np.maximum(np.minimum(self.states[i][j]['preward'][-1] + self.preward_sd*np.random.normal(0, 1), self.preward_high), self.preward_low))
+
+    def _updaterewardpaths(self):
+
+            for i in [1, 2]:
+                for j in [0, 1]:
+                    self.states[i][j]['preward'].append(np.maximum(np.minimum(self.states[i][j]['preward'][-1] + self.preward_sd*np.random.normal(0, 1), self.preward_high), self.preward_low))
+
+    def plotrewardpaths(self):
+        fig, ax = plt.subplots()
+        for i in [1, 2]:
+            for j in [0, 1]:
+                ax.plot(np.arange(self.ntrials), self.states[i][j]['preward'], label='Option (' + str(i) + ', ' + str(j) + ')')
+        ax.set_title('Step 2 Reward Probabilities')
+        ax.set_ylabel('Reward Probability')
+        ax.set_xlabel('Trial')
+        plt.legend()
+        plt.savefig('rewardpaths.png')
+
+    def step1(self):
+        # Randomize stimuli to L/R
+        self.step1_lrsequence.append(np.random.multinomial(1,
+                                                           pvals=[0.5, 0.5]))
+
+        self.curr_stim = {
+            'selected' : None,
+            'f' : self.states[0][self.step1_lrsequence[self.t][0]],
+            'j' : self.states[0][self.step1_lrsequence[self.t][1]]
+        }
+
+        drawatpos(stim=self.curr_stim['f']['stim']['norm'],
+                  xpos=self.boxpos['x']['left'],
+                  ypos=self.boxpos['y']['neutral'])
+        drawatpos(stim=self.curr_stim['j']['stim']['norm'],
+                  xpos=self.boxpos['x']['right'],
+                  ypos=self.boxpos['y']['neutral'])
+        self.win.flip()
+
+        # Collect the response
+        starttime = core.getTime()
+        keys=event.waitKeys(maxWait=self.tlimitchoice, keyList=['f','j'], timeStamped=True)
+        if keys is None:
+            self.abort_trial(step=1)
+        else:
+            self.trial_aborted = False
+
+            step1_key = keys[0][0]
+            self.a1 = self.curr_stim[step1_key]['id']
+            step1_rt = keys[0][1] - starttime
+
+            # Store data
+            self.data['a1'].append(self.a1)
+            self.data['a1_key'].append(step1_key)
+            self.data['rt1'].append(step1_rt)
+
+            # Highlight selected choice
+            self.curr_stim['selected'] = self.curr_stim[step1_key]
+            drawatpos(stim=self.curr_stim['selected']['stim']['act'],
+                      xpos=self.curr_stim['selected']['stim']['norm'].pos[0],
+                      ypos=self.curr_stim['selected']['stim']['norm'].pos[1])
+            self.win.flip()
+            core.wait(0.2)
+
+    def step2(self):
+        # Randomize stimuli to L/R
+        self.step2_lrsequence.append(np.random.multinomial(1,
+                                                           pvals=[0.5, 0.5]))
+
+        # Assign stimuli to L and R sides
+        self.curr_stim['f'] = self.states[self.s2][self.step2_lrsequence[self.t][0]]
+
+        self.curr_stim['j'] = self.states[self.s2][self.step2_lrsequence[self.t][1]]
+
+        drawatpos(stim=self.curr_stim['selected']['stim']['deact'],
+                  xpos=self.boxpos['x']['neutral'],
+                  ypos=self.boxpos['y']['high'])
+        drawatpos(stim=self.curr_stim['f']['stim']['norm'],
+                  xpos=self.boxpos['x']['left'],
+                  ypos=self.boxpos['y']['neutral'])
+        drawatpos(stim=self.curr_stim['j']['stim']['norm'],
+                  xpos=self.boxpos['x']['right'],
+                  ypos=self.boxpos['y']['neutral'])
+        self.win.flip()
+
+        # Collect the response
+        starttime = core.getTime()
+        keys=event.waitKeys(maxWait=self.tlimitchoice, keyList=['f','j'], timeStamped=True)
+        if keys is None:
+            self.abort_trial(step=2)
+        else:
+            self.trial_aborted = False
+
+            step2_key = keys[0][0]
+            self.a2 = self.curr_stim[step2_key]['id']
+            step2_rt = keys[0][1] - starttime
+
+            # Store data
+            self.data['a2'].append(self.a2)
+            self.data['a2_key'].append(step2_key)
+            self.data['rt2'].append(step2_rt)
+
+            # Highlight selected choice
+            self.curr_stim['selected'] = self.curr_stim[step2_key]
+            drawatpos(stim=self.curr_stim['selected']['stim']['act'],
+                      xpos=self.curr_stim['selected']['stim']['norm'].pos[0],
+                      ypos=self.curr_stim['selected']['stim']['norm'].pos[1])
+            self.win.flip()
+            core.wait(0.2)
+
+    def state_transition(self):
+        """ Generates state 2 step and animates present choice """
+
+        # Generate transition
+        p_trans = self.states[0][self.a1]['ptrans']
+        self.s2 = int(np.argmax(np.random.multinomial(1, pvals=p_trans)) + 1)
+        self.data['s2'].append(self.s2)
+
+        # Determine whether it is a common or rare transition
+        if int(self.s2-1) == np.argmax(p_trans):
+            self.data['trans_cr'].append(1)
+        else:
+            self.data['trans_cr'].append(0)
+
+        # Animate choice
+        animatechoice(win=self.win,
+                      stim=self.curr_stim['selected']['stim']['act'],
+                      endpos_x=self.boxpos['x']['neutral'],
+                      endpos_y=self.boxpos['y']['high'],
+                      animate_duration=self.t_transition)
+
+        drawatpos(stim=self.curr_stim['selected']['stim']['deact'],
+                  xpos=self.boxpos['x']['neutral'],
+                  ypos=self.boxpos['y']['high'])
+        self.win.flip()
+        core.wait(0.2)
+
+    def sample_reward(self):
+        """ Returns reward and performs animation """
+
+        p_reward = self.states[self.s2][self.a2]['preward'][self.t]
+        rewarded = np.random.binomial(1, p=p_reward)
+        self.data['r'].append(rewarded)
+
+        # Animate choice
+        animatechoice(win=self.win,
+                      stim=self.curr_stim['selected']['stim']['act'],
+                      endpos_x=self.boxpos['x']['neutral'],
+                      endpos_y=self.boxpos['y']['high'],
+                      animate_duration=self.t_transition)
+
+        drawatpos(stim=self.curr_stim['selected']['stim']['deact'],
+                  xpos=self.boxpos['x']['neutral'],
+                  ypos=self.boxpos['y']['high'])
+        self.win.flip()
+        core.wait(0.2)
+
+        drawatpos(stim=self.curr_stim['selected']['stim']['deact'],
+                  xpos=self.boxpos['x']['neutral'],
+                  ypos=self.boxpos['y']['high'])
+
+        drawatpos(stim=self.reward_stim[rewarded],
+                  xpos=self.boxpos['x']['neutral'],
+                  ypos=self.boxpos['y']['low'])
+        self.win.flip()
+        core.wait(2.0)
+
+
+    def abort_trial(self, step):
+        self.trial_aborted = True
+        self.data['aborted'][self.t] = 1
+        self.t += 1
+        self.ntrials += 1
+        self._updaterewardpaths()
+
+        if step == 1:
+            # If we abort on first trial, maintain size of step2 sequence
+            self.step2_lrsequence.append(np.array([-1, -1]))
+
+            # Store data
+            self.data['a1'].append(-1)
+            self.data['a1_key'].append('ABORTED')
+            self.data['rt1'].append(np.nan)
+            self.data['s2'].append(-1)
+            self.data['trans_cr'].append('ABORTED')
+            self.data['a2'].append(-1)
+            self.data['a2_key'].append('ABORTED')
+            self.data['rt2'].append(np.nan)
+            self.data['r'].append(np.nan)
+        elif step == 2:
+            self.data['a2'].append(-1)
+            self.data['a2_key'].append('NA')
+            self.data['rt2'].append(np.nan)
+            self.data['r'].append(np.nan)
+
+        drawatpos(stim=self.curr_stim['f']['stim']['spoiled'],
+                  xpos=self.boxpos['x']['left'],
+                  ypos=self.boxpos['y']['neutral'])
+        drawatpos(stim=self.curr_stim['j']['stim']['spoiled'],
+                  xpos=self.boxpos['x']['right'],
+                  ypos=self.boxpos['y']['neutral'])
+        self.win.flip()
+        core.wait(2.0)
+
+    def iti(self):
+        """ Intertrial interval """
+        self.win.flip()
+        core.wait(np.random.exponential(self.ititime))
+
+    def run(self):
+        """ Runs iterations of the steps in trials """
+
+        # Run experiment
+        while self.t < self.ntrials:
+            self.data['trial'].append(self.t)
+            self.data['aborted'].append(0)
+            self.iti()
+            self.step1()
+
+            if self.trial_aborted is False:
+                self.state_transition()
+                self.step2()
+
+            if self.trial_aborted is False:
+                self.sample_reward()
+                self.t += 1
+
+        self.win.close()
+
+    def savedata(self):
+
+        # Save data
+        self.data['subject_id'] = [self.subject_id]*len(self.data['trial'])
+        df = pd.DataFrame.from_dict(self.data)
+
+        df.to_csv('twostep-tut-' + self.subject_id + '.csv', index=False)
+
 
 def loadstimuli(win, stim_set, stim_size):
     """
