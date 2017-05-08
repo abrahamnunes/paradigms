@@ -136,7 +136,7 @@ visual.TextStim(win,
 ).draw()
 win.flip()
 event.waitKeys()
-"""
+
 # Screen 2
 visual.TextStim(win,
     text = 'Your goal in this experiment is to win as much money as possible.\n\n' +
@@ -187,30 +187,10 @@ visual.TextStim(win,
 win.flip()
 event.waitKeys(keyList=['c'])
 
-# Screen 5
+# Screen 5 + 6 (combined)
 visual.TextStim(win,
     text='For this demonstration, you will select the box you want using the keyboard.\n\n' +
-    'Select the left box with the "f" key, and the right box with the "j" key.',
-    pos = [0, textypos['top']]
-).draw()
-
-drawatpos(tutorialstim[3][0]['norm'],
-          xpos=boxpos['x']['left'],
-          ypos=boxpos['y']['neutral'])
-drawatpos(tutorialstim[3][1]['norm'],
-          xpos=boxpos['x']['right'],
-          ypos=boxpos['y']['neutral'])
-
-visual.TextStim(win,
-    text='Press "c" to continue...',
-    pos = [0, textypos['bottom']]
-).draw()
-win.flip()
-event.waitKeys(keyList=['c'])
-
-# Screen 6
-visual.TextStim(win,
-    text='Practice selecting them now, using the "f" and "j" keys.\n\n' +
+    'Select the left box with the "f" key, and the right box with the "j" key.\n\n' +
     'When you select a box, it will highlight.',
     pos = [0, textypos['top']]
 ).draw()
@@ -224,7 +204,7 @@ drawatpos(tutorialstim[3][1]['norm'],
 
 visual.TextStim(win,
     text='The tutorial will continue after 4 presses.\n\n' +
-    'Press "c" to continue...',
+    'Press "c" to continue to the demonstration...',
     pos = [0, textypos['bottom']]
 ).draw()
 win.flip()
@@ -1281,7 +1261,7 @@ visual.TextStim(win,
 ).draw()
 win.flip()
 event.waitKeys(keyList=['c'])
-"""
+
 
 """
 ================================================================================
@@ -1322,7 +1302,7 @@ trials.plotrewardpaths()
 ================================================================================
 """
 
-"""
+
 # Screen 34
 visual.TextStim(win,
     text='That is the end of the practice game.\n\n' +
@@ -1353,13 +1333,21 @@ visual.TextStim(win,
     '     - Wins on one colour following wins on another\n' +
     '     - The best box moving predictably from one color to the next\n\n' +
     'The computer is not trying to catch you or trick you.\n\n' +
-    'Remember, it is a game of both skill and chance, so good luck!\n\n' +
-    'Press "c"to continue.',
+    'Press any key to continue.',
+    pos=[0, textypos['top']]
+).draw()
+win.flip()
+event.waitKeys()
+
+visual.TextStim(win,
+    text='Hints:\n\n' +
+    'Remember, it is a game of both skill and chance. Even though there is randomness in how the boxes work, the training you have done so far will enable you to improve your chances of winning!\n\n' +
+    'Press "c" to conclude this tutorial.',
     pos=[0, textypos['top']]
 ).draw()
 win.flip()
 event.waitKeys(keyList=['c'])
-"""
+
 
 win.close()
 core.quit()
