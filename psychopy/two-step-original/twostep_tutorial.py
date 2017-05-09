@@ -1292,7 +1292,7 @@ trials = Trials(subject_id=subject_id,
 
 trials.run()
 trials.savedata()
-trials.plotrewardpaths()
+#trials.plotrewardpaths()
 
 """
 ================================================================================

@@ -20,29 +20,15 @@ from twostepcore import *
 '''
 
 infodict = {
-    'Subject ID'       : '',
-    'Block'            : '1',
-    'Trials per Block' : '201'
+    'Subject ID'       : ''
     }
 
 mygui = gui.DlgFromDict(dictionary=infodict, title='Two-Step Task')
 
 subject_id = infodict['Subject ID'].encode('utf8')
-block = infodict['Block'].encode('utf8')
-trials_per_block = infodict['Trials per Block'].encode('utf8')
 
 if subject_id == '': # If no subject ID entered, quit.
     core.quit()
-
-if block == '': # If no block number entered, quit.
-    core.quit()
-else:
-    block = int(block)
-
-if trials_per_block == '':
-    core.quit()
-else:
-    trials_per_block = int(trials_per_block)
 
 '''
 ================================================================================
@@ -52,7 +38,10 @@ else:
 ================================================================================
 '''
 
-trials_per_block = trials_per_block  # using 75 trials per block
+trials_per_block = 10               # Total of 201 trials
+break_trials     = [5, 8]          # After which trials the breaks will occur
+break_duration   = 30                # Break duration in seconds
+use_daw_rpaths   = True              # Use the reward paths from Daw's version
 ptrans           = 0.7               # Probability of the correct transition
 preward_low      = 0.25              # lower bound on reward probabilities
 preward_high     = 0.75              # upper bound on reward probabilities
@@ -139,6 +128,13 @@ event.waitKeys(keyList=['c'])
 ================================================================================
 """
 
+if use_daw_rpaths is True:
+    pathdf = pd.read_csv('daw_reward_paths.csv', header=None)
+    preset_paths = pathdf.values
+    preset_paths = preset_paths[:trials_per_block, :]
+else:
+    preset_paths = None
+
 # Assign reward and transition probabilities to stimuli
 trials = Trials(subject_id=subject_id,
                 win=win,
@@ -147,8 +143,11 @@ trials = Trials(subject_id=subject_id,
                 state_c_stim=taskstim[2],
                 reward_stim=rewardstim,
                 ntrials=trials_per_block,
-                block=block,
+                block=1,
+                breaks=break_trials,
+                break_duration=break_duration,
                 boxpos=boxpos,
+                preset_paths=preset_paths,
                 tutorial=False,
                 ptrans=ptrans,
                 preward_low=preward_low,

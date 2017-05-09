@@ -39,8 +39,14 @@ class Trials(object):
         Number of trials to create
     block : int > 0
         Which block of trials this will be (for naming output files)
+    breaks : list
+        Indices of the trials at which subjects will be given a break
+    break_duration : float
+        Duration of the break time in seconds
     boxpos : dict
         Dictionary specifying box positions
+    preset_paths : ndarray
+        Prespecified reward paths for the step 2 choices, if available
     tutorial : bool
         Whether this is for tutorial (sets reward probabilities the same for all subjects).
     ptrans : float on interval [0, 1]
@@ -59,7 +65,7 @@ class Trials(object):
         Average duration (seconds) of intertrial interval (mean of exp distrib)
 
     """
-    def __init__(self, subject_id, win, state_a_stim, state_b_stim, state_c_stim, reward_stim, ntrials, block, boxpos, tutorial=False, ptrans=0.7, preward_low=0.25, preward_high=0.75, preward_sd=0.025, tlimitchoice=3, t_transition=0.4, ititime=1):
+    def __init__(self, subject_id, win, state_a_stim, state_b_stim, state_c_stim, reward_stim, ntrials, block, breaks, break_duration, boxpos, preset_paths=None, tutorial=False, ptrans=0.7, preward_low=0.25, preward_high=0.75, preward_sd=0.025, tlimitchoice=3, t_transition=0.4, ititime=1):
         self.subject_id = subject_id
         self.block = block
         self.win = win
@@ -116,7 +122,10 @@ class Trials(object):
         self.t_transition = t_transition
         self.ititime = ititime
 
-        self._initrewardpaths()
+        self.breaks = breaks
+        self.break_duration = break_duration
+
+        self._initrewardpaths(preset_paths)
 
         # Set counters and data arrays
         self.t = 0 # current trial
@@ -143,17 +152,24 @@ class Trials(object):
             'trans_cr' : []  # Common (1) or rare (0) transition
         }
 
-    def _initrewardpaths(self):
+    def _initrewardpaths(self, preset_paths=None):
 
-        if self.tutorial is True:
-            np.random.seed(seed=12345)
+        if preset_paths is None:
+            if self.tutorial is True:
+                np.random.seed(seed=12345)
 
-        for i in [1, 2]:
-            for j in [0, 1]:
-                self.states[i][j]['preward'].append(np.random.uniform(self.preward_low, self.preward_high))
+            for i in [1, 2]:
+                for j in [0, 1]:
+                    self.states[i][j]['preward'].append(np.random.uniform(self.preward_low, self.preward_high))
 
-                for t in range(self.ntrials-1):
-                    self.states[i][j]['preward'].append(np.maximum(np.minimum(self.states[i][j]['preward'][-1] + self.preward_sd*np.random.normal(0, 1), self.preward_high), self.preward_low))
+                    for t in range(self.ntrials-1):
+                        self.states[i][j]['preward'].append(np.maximum(np.minimum(self.states[i][j]['preward'][-1] + self.preward_sd*np.random.normal(0, 1), self.preward_high), self.preward_low))
+        elif preset_paths is not None:
+            path_idx = 0
+            for i in [1, 2]:
+                for j in [0, 1]:
+                    self.states[i][j]['preward'] = preset_paths[:, path_idx].tolist()
+                    path_idx += 1
 
     def _updaterewardpaths(self):
 
@@ -316,6 +332,10 @@ class Trials(object):
         self.ntrials += 1
         self._updaterewardpaths()
 
+        if self.breaks is not None:
+            for i in range(len(self.breaks)):
+                self.breaks[i] = self.breaks[i] + 1
+
         if step == 1:
             # If we abort on first trial, maintain size of step2 sequence
             self.step2_lrsequence.append(np.array([-1, -1]))
@@ -350,11 +370,35 @@ class Trials(object):
         self.win.flip()
         core.wait(np.random.exponential(self.ititime))
 
+    def break_time(self):
+        """ Runs break to give participant some rest """
+        time_remaining = self.break_duration
+        while time_remaining > 0:
+            time_remaining = int(time_remaining - 1)
+            vis.TextStim(self.win,
+                text='You will now be given a ' + str(self.break_duration) + 'second break.\n\n' +
+                'Since this is a short rest, please do not leave the room. The task will restart 3 seconds after the break-time is over.\n\n' +
+                'Time remaining: ' + str(time_remaining)
+            ).draw()
+            self.win.flip()
+            core.wait(1.0)
+
+        vis.TextStim(self.win,
+            text='The task will now restart in 3 seconds.'
+        ).draw()
+        self.win.flip()
+        core.wait(3.0)
+
+
     def run(self):
         """ Runs iterations of the steps in trials """
 
         # Run experiment
         while self.t < self.ntrials:
+            if self.breaks is not None:
+                if self.t in self.breaks:
+                    self.break_time()
+
             self.data['trial'].append(self.t)
             self.data['aborted'].append(0)
             self.iti()
