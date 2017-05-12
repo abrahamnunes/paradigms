@@ -38,8 +38,8 @@ if subject_id == '': # If no subject ID entered, quit.
 ================================================================================
 '''
 
-trials_per_block = 10               # Total of 201 trials
-break_trials     = [5, 8]          # After which trials the breaks will occur
+trials_per_block = 201               # Total of 201 trials
+break_trials     = [67, 134]          # After which trials the breaks will occur
 break_duration   = 30                # Break duration in seconds
 use_daw_rpaths   = True              # Use the reward paths from Daw's version
 ptrans           = 0.7               # Probability of the correct transition
