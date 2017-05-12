@@ -46,7 +46,7 @@ ptrans           = 0.7               # Probability of the correct transition
 preward_low      = 0.25              # lower bound on reward probabilities
 preward_high     = 0.75              # upper bound on reward probabilities
 preward_sd       = 0.025             # SD of Gaussian process reward prob
-tlimitchoice     = 3                 # Time limit for making a choice (s)
+tlimitchoice     = 2                 # Time limit for making a choice (s)
 t_transition     = 0.4               # Time during transition animation (s)
 ititime          = 0.5               # Mean of expon distrib ITI time (s)
 
