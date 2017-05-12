@@ -65,7 +65,7 @@ class Trials(object):
         Average duration (seconds) of intertrial interval (mean of exp distrib)
 
     """
-    def __init__(self, subject_id, win, state_a_stim, state_b_stim, state_c_stim, reward_stim, ntrials, block, breaks, break_duration, boxpos, preset_paths=None, tutorial=False, ptrans=0.7, preward_low=0.25, preward_high=0.75, preward_sd=0.025, tlimitchoice=3, t_transition=0.4, ititime=1):
+    def __init__(self, subject_id, win, state_a_stim, state_b_stim, state_c_stim, reward_stim, ntrials, block, boxpos, breaks=None, break_duration=30, preset_paths=None, tutorial=False, ptrans=0.7, preward_low=0.25, preward_high=0.75, preward_sd=0.025, tlimitchoice=3, t_transition=0.4, ititime=1):
         self.subject_id = subject_id
         self.block = block
         self.win = win

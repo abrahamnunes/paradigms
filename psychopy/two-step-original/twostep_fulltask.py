@@ -172,7 +172,5 @@ visual.TextStim(win,
 win.flip()
 event.waitKeys(keyList=['c'])
 
-
-
 win.close()
 core.quit()

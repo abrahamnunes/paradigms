@@ -37,6 +37,7 @@ if subject_id == '': # If no subject ID entered, quit.
 
 ntrain       = 50    # using 50 trials, as per Daw et al. 2011
 ptrans       = 0.7   # Probability of the correct transition
+preset_rpath = True              # Use the reward paths from Daw's version
 preward_low  = 0.25  # lower bound on reward probabilities
 preward_high = 0.75  # upper bound on reward probabilities
 preward_sd   = 0.025 # SD of the Gaussian process for reward probabilities
@@ -1271,6 +1272,13 @@ event.waitKeys(keyList=['c'])
 ================================================================================
 """
 
+if preset_rpath is True:
+    pathdf = pd.read_csv('tut_reward_paths.csv', header=None)
+    preset_paths = pathdf.values
+    preset_paths = preset_paths[:ntrain, :]
+else:
+    preset_paths = None
+
 # Assign reward and transition probabilities to stimuli
 trials = Trials(subject_id=subject_id,
                 win=win,
@@ -1281,6 +1289,8 @@ trials = Trials(subject_id=subject_id,
                 ntrials=ntrain,
                 block=1,
                 boxpos=boxpos,
+                preset_paths=preset_paths,
+                breaks=None,
                 tutorial=True,
                 ptrans=ptrans,
                 preward_low=preward_low,
